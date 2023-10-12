@@ -9,14 +9,18 @@ std::vector<std::pair<int, int64_t>> N[100007];
 std::vector<std::pair<int, int64_t>> R[100007];
 std::pair<int64_t, std::set<std::pair<int, int64_t>>> NDst[100007];
 std::pair<int64_t, std::set<std::pair<int, int64_t>>> EDst[100007];
+std::pair<int64_t, std::set<std::pair<int, int64_t>>> XDst[100007];
+std::set<int> P;
 
 int64_t Calc(int NN)
 {
   int x = 1;
-  int64_t res = 1e18;
+  int64_t res = 1e16;
 
   while(x != NN)
   {
+    P.insert(x);
+
     if (EDst[x].second.size() == 0)
       return -1;
     if (EDst[x].second.size() > 1)
@@ -34,7 +38,7 @@ int64_t Calc(int NN)
     x = (*EDst[x].second.begin()).first;
   }
 
-  return (res == (int64_t)1000000000000000000) ? -1 : res;
+  return (res >= (int64_t)1e16) ? -1 : res;
 }
 
 void CalcDst(int v, std::pair<int64_t, std::set<std::pair<int, int64_t>>>* dst, std::vector<std::pair<int, int64_t>>* G)
@@ -66,8 +70,15 @@ int main()
   int NN, M;
   std::cin >> NN >> M;
 
-  for(int i = 0; i <= NN; ++i) EDst[i].first = 1e18;
-  for(int i = 0; i <= NN; ++i) NDst[i].first = 1e18;
+  if(NN == 1 or M == 0)
+  {
+    std::cout << "-1";
+    return 0;
+  }
+
+  for(int i = 0; i <= NN; ++i) EDst[i].first = 1e16;
+  for(int i = 0; i <= NN; ++i) NDst[i].first = 1e16;
+  for(int i = 0; i <= NN; ++i) XDst[i].first = 1e16;
 
   for (int i = 0; i < M; i++)
   {
@@ -80,13 +91,21 @@ int main()
 
   CalcDst(NN, EDst, R);
   CalcDst(1, NDst, N);
+  CalcDst(NN, XDst, N);
 
-  /*for(int i = 1; i <= NN; ++i)
+ /*for(int i = 1; i <= NN; ++i)
   {
-    std::cout << EDst[i].first << " " << NDst[i].first << " => ";
-    for(auto x : EDst[i].second) std::cout << x << " ";
+    std::cout << EDst[i].first << " " << NDst[i].first << " " << XDst[i].first << " => ";
+    for(auto x : EDst[i].second) std::cout << x.first << " ";
     std::cout << "\n";
   }*/
 
-  std::cout << Calc(NN);
+  P.insert(NN);
+  int64_t w = Calc(NN);
+  if(w == -1 and NDst[NN].first != 1e16 and XDst[1].first != 1e16) w = 2*NDst[NN].first + XDst[1].first;
+  for(int i = 1; i <= NN; ++i)
+  {
+    if(P.find(i) == P.end()) w = std::min(w, NDst[i].first + EDst[i].first);
+  }
+  std::cout << w;
 }
