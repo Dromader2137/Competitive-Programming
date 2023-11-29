@@ -36,7 +36,7 @@ void LCA(int v, int prev, int prevWeight) {
 	lcatable[v][0].second = prevWeight;
 	for(int i = 0; i < 19; ++i) {
 		lcatable[v][i + 1].first = lcatable[lcatable[v][i].first][i].first;
-		lcatable[v][i + 1].second = std::max(lcatable[v][i].second,
+		lcatable[v][i + 1].second = std::min(lcatable[v][i].second,
 											 lcatable[lcatable[v][i].first][i].second);
 	}
 }
@@ -80,6 +80,7 @@ int getLCABiggest(int a, int b) {
 	int max = 10000;
 
 	for(int i = 19; i >= 0; --i) {	
+		// std::cout << c << " " << a << " " << i << " " << lcatable[a][i].second << " " << lcatable[a][i].first << "\n";
 		if(lcatable[a][i].first == 0) continue;	
 		if(subtree(c, lcatable[a][i].first)) {
 			max = std::min(max, lcatable[a][i].second);
@@ -87,6 +88,7 @@ int getLCABiggest(int a, int b) {
 		}
 	}
 	for(int i = 19; i >= 0; --i) {
+		// std::cout << c << " " << b << " " << i << " " << lcatable[b][i].second << " " << lcatable[b][i].first << "\n";
 		if(lcatable[b][i].first == 0) continue;	
 		if(subtree(c, lcatable[b][i].first)) {
 			max = std::min(max, lcatable[b][i].second);
@@ -97,7 +99,7 @@ int getLCABiggest(int a, int b) {
 }
 
 int main() {
-	// std::ios_base::sync_with_stdio(0); std::cin.tie(0);
+	std::ios_base::sync_with_stdio(0); std::cin.tie(0);
 	int N; std::cin >> N;
 
 	for(int i = 1; i <= N; ++i) {
@@ -117,7 +119,7 @@ int main() {
 		for(int j = 1; j <= N; ++j) {
 			int maxW = std::min(std::min(i - 1, j - 1), std::min(N - i, N - j));
 			int w;
-			for(w = 1; w / 2 <= maxW; w += 2) {
+			for(w = std::max(1, biggestSquare[i][j - 1] - 2); w / 2 <= maxW; w += 2) {
 				bool t = (prefixH[j - w / 2 - 1][i - w / 2] == prefixH[j + w / 2][i - w / 2]);
 				bool b = (prefixH[j - w / 2 - 1][i + w / 2] == prefixH[j + w / 2][i + w / 2]);
 				bool l = (prefixV[j - w / 2][i - w / 2 - 1] == prefixV[j - w / 2][i + w / 2]);
@@ -126,22 +128,23 @@ int main() {
 				if(t and b and l and r) biggestSquare[j][i] = w;
 				else break;
 			}
+			if(biggestSquare[j][i] == 0 and !table[j][i]) biggestSquare[j][i] = 1;
 		}
 	}
 
 	for(int i = 1; i <= N; ++i) {
 		for(int j = 1; j <= N; ++j) {
-			if(biggestSquare[j][i] >= 1) {
+			if(biggestSquare[j][i] >= 1 and !table[j][i]) {
 				if(i > 1 and !table[j][i - 1]) Q.push({std::min(biggestSquare[j][i], biggestSquare[j][i - 1]),{{j, i},{j, i - 1}}});
 				if(i < N and !table[j][i + 1]) Q.push({std::min(biggestSquare[j][i], biggestSquare[j][i + 1]),{{j, i},{j, i + 1}}});
 				if(j > 1 and !table[j - 1][i]) Q.push({std::min(biggestSquare[j][i], biggestSquare[j - 1][i]),{{j, i},{j - 1, i}}});
 				if(j < N and !table[j + 1][i]) Q.push({std::min(biggestSquare[j][i], biggestSquare[j + 1][i]),{{j, i},{j + 1, i}}});
 			}
-			std::cout << biggestSquare[j][i];
+			// std::cout << biggestSquare[j][i];
 		}
-		std::cout << "\n";
+		// std::cout << "\n";
 	}
-	std::cout << "\n";
+	// std::cout << "\n";
 	
 #ifdef DEBUG
 	for(int i = 1; i <= N; ++i) {
@@ -169,19 +172,12 @@ int main() {
 		unionize(akt.second.first, akt.second.second);
 		connections[a].push_back({b, akt.first});
 		connections[b].push_back({a, akt.first});
+		// std::cout << a << " " << b << " " << akt.first << "\n";
 		// std::cout << akt.second.first.first << " " <<akt.second.first.second << " " <<
-		// 	akt.second.second.first << " " << akt.second.second.second << " " << akt.first << "\n";
+		// akt.second.second.first << " " << akt.second.second.second << " " << akt.first << "\n";
 	}
 
 #ifdef kjkjDEBUG
-	std::cout << "\n";
-	for(int i = 1; i <= N; ++i) {
-		std::cout << i << ": ";
-		for(int j = 0; j < 20; ++j)
-			std::cout << lcatable[i][j].first << " ";
-		std::cout << "\n";
-	}
-	std::cout << "\n";
 	for(int i = 1; i <= N; ++i) {
 		std::cout << i << ": ";
 		for(int j = 0; j < 20; ++j)
@@ -212,6 +208,15 @@ int main() {
 			subtreeCounter++;
 		}
 	}
+	
+	// std::cout << "\n";
+	// for(int i = 1; i <= N*N; ++i) {
+	// 	std::cout << i << ": ";
+	// 	for(int j = 0; j < 20; ++j)
+	// 		std::cout << lcatable[i][j].first << " ";
+	// 	std::cout << "\n";
+	// }
+	// std::cout << "\n";
 
 	for(int i = 0; i < Q; ++i) {
 		int a, b, c, d; std::cin >> b >> a >> d >> c;
@@ -219,11 +224,14 @@ int main() {
 			std::cout << biggestSquare[a][b] << "\n";
 			continue;
 		}
-		std::cout << biggestSquare[a][b] << " " << biggestSquare[c][d] << "\n";
+		// std::cout << biggestSquare[a][b] << " " << biggestSquare[c][d] << "\n";
 		int e = pointToArray(a, b, N), f = pointToArray(c, d, N);
 		// std::cout << "\n" << e << " " << subtreeTable[e] << "\n";
 		// std::cout << f << " " << subtreeTable[f] << "\n";
-		if(subtreeTable[e] == subtreeTable[f] and (!table[a][b]) and (!table[c][d])) std::cout << getLCABiggest(e, f) << "\n";
+		if(subtreeTable[e] == subtreeTable[f] and (!table[a][b]) and (!table[c][d])) {
+			std::cout << std::min(getLCABiggest(e, f), std::min(biggestSquare[a][b], biggestSquare[c][d])) << "\n";
+			// std::cout << getLCAPoint(e, f) << "\n";
+		}
 		else std::cout << "0\n";
 	}
 
